@@ -1,0 +1,31 @@
+<form class="login-form" [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+  <div class="form-group">
+    <label for="email">Email:</label>
+    <input id="email" class="form-control" type="email" formControlName="email" />
+    <div class="form-error" *ngIf="loginForm.get('email')?.touched && loginForm.get('email')?.invalid">
+      <small *ngIf="loginForm.get('email')?.errors?.['required']">Email is required.</small>
+      <small *ngIf="loginForm.get('email')?.errors?.['email']">Invalid email format.</small>
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label for="password">Password:</label>
+    <input id="password" class="form-control" type="password" formControlName="password" />
+    <div class="form-error" *ngIf="loginForm.get('password')?.touched && loginForm.get('password')?.invalid">
+      <small *ngIf="loginForm.get('password')?.errors?.['required']">Password is required.</small>
+      <small *ngIf="loginForm.get('password')?.errors?.['minlength']">Password must be at least 6 characters.</small>
+    </div>
+    <div style="margin-top: 3px;" class="d-grid gap-2 d-md-flex justify-content-md-end">
+      <button class="btn btn-sm btn-outline-danger" style="margin-top: 2px;">Forgot my password</button>
+    </div>
+  </div>
+
+  <div class="d-grid gap-2 d-md-flex justify-content-md-end btn-group">
+    <button class="btn btn-lg btn-outline-success me-md-2"
+            type="submit"
+            [disabled]="!loginForm.valid">
+      Login
+    </button>
+    <a href="/signup" class="btn btn-lg btn-outline-success">Go to sign up</a>
+  </div>
+</form>

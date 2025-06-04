@@ -1,0 +1,30 @@
+:host {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: 26vh;
+}
+
+.login-form {
+  background-color: white;
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+  min-width: 400px;
+}
+
+.login-form .form-group {
+  margin-bottom: 5px;
+}
+
+.login-form .form-error {
+  color: var(--error-red);
+}
+
+.warning {
+  border-color: var(--error-red) !important;
+  color: var(--error-red) !important;
+}
+.btn-outline-danger:hover, .btn-outline-danger:focus {
+  background-color: var(--error-red) !important;
+}
