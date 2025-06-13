@@ -1,34 +1,39 @@
 package config
 
 import (
-	"database/sql"
-	"easyinvesting/pkg/utils"
+	"easyinvesting/pkg/models"
 	"errors"
 	"os"
 
-	_ "github.com/mattn/go-sqlite3"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 )
 
-var DB *sql.DB
-
-func createTables(db *sql.DB) {
-	filePath := "./db/sql-files/create_tables.sql"
-	query := utils.ReadFile(filePath)
-	db.Exec(query)
-}
+var DB *gorm.DB
 
 func InitDB() {
 	var err error
-	dbString := os.Getenv("CHRONOS_DB_STRING")
+	dbString := os.Getenv("EASYINVESTING_DB_STRING")
+	isProd := os.Getenv("EASYINVESTING_PROD") == "true"
+	if !isProd && dbString == "" {
+		dbString = "db/easyinvesting.db"
+	}
 	if dbString == "" {
-		panic(errors.New("CHRONOS_DB_STRING is not set"))
+		panic(errors.New("EASYINVESTING_DB_STRING is not set"))
 	}
 
-	DB, err = sql.Open("sqlite3", dbString)
+	DB, err = gorm.Open(sqlite.Open(dbString), &gorm.Config{
+		SkipDefaultTransaction:                   true,
+		PrepareStmt:                              true,
+		DisableForeignKeyConstraintWhenMigrating: true,
+	})
 	if err != nil {
 		panic(err)
 	}
 
-	DB.SetMaxOpenConns(1000)
-	createTables(DB)
+	if err = DB.AutoMigrate(
+		models.AllModels...,
+	); err != nil {
+		panic(err)
+	}
 }

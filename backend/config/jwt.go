@@ -13,9 +13,13 @@ var secretKey = ""
 
 func SecretKey() string {
 	if secretKey == "" {
-		secretKey = os.Getenv("SECRET_KEY")
+		secretKey = os.Getenv("EASYINVESTING_SECRET_KEY")
+		isProd := os.Getenv("EASYINVESTING_PROD") == "true"
+		if !isProd && secretKey == "" {
+			secretKey = "easyinvest"
+		}
 		if secretKey == "" {
-			panic("SECRET_KEY IS NOT SET")
+			panic("EASYINVESTING_SECRET_KEY IS NOT SET")
 		}
 	}
 	return secretKey

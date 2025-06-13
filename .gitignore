@@ -2,3 +2,4 @@ __pycache__/
 .angular/
 .vscode/
 node_modules/
+*.db

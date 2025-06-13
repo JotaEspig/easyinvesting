@@ -7,7 +7,7 @@ import { backendHost } from '../app.config';
   providedIn: 'root'
 })
 export class HelloService {
-  private apiUrl = `http://${backendHost}/api/hello`;
+  private apiUrl = `http://${backendHost}/api/v1/hello`;
 
   constructor(private http: HttpClient) {}
 

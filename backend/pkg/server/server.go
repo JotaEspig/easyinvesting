@@ -2,6 +2,7 @@ package server
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -26,7 +27,17 @@ func NewServer(port int) *Server {
 
 	s.echo.Use(getLoggerFunc())
 	s.echo.Use(middleware.Recover())
-	s.echo.Use(middleware.CORS())
+
+	frontendURL := os.Getenv("EASYINVESTING_FRONTEND_URL")
+	s.echo.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins: []string{
+			"http://localhost:4200",
+			"http://localhost",
+			frontendURL,
+		},
+		AllowMethods: []string{echo.GET, echo.POST, echo.PUT, echo.DELETE, echo.OPTIONS},
+		AllowHeaders: []string{echo.HeaderContentType, echo.HeaderAuthorization},
+	}))
 
 	s.setRoutes()
 

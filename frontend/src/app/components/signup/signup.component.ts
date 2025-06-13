@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common'
+import { ApiService } from '../../services/api.service';
 
 @Component({
   selector: 'app-signup',
@@ -15,7 +16,7 @@ import { CommonModule } from '@angular/common'
 export class SignupComponent {
   signupForm: FormGroup;
 
-  constructor(private fb: FormBuilder) {
+  constructor(private fb: FormBuilder, private apiService: ApiService) {
     this.signupForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(6)]],
@@ -31,13 +32,25 @@ export class SignupComponent {
 
   onSubmit(): void {
     if (this.signupForm.valid && !this.isPasswordMismatch()) {
-      const { email, password, confirmPassword } = this.signupForm.value;
-      // Handle signup logic here
-      console.log('Signup successful', { email, password, confirmPassword });
+      const { email, password, _ } = this.signupForm.value;
+      const userData = {
+        "email": email,
+        "password": password
+      };
+      console.log('Form is valid, submitting data:', userData);
+
+      this.apiService.postRequest("signup", userData).subscribe({
+        next: (response) => {
+          console.log('Signup successful:', response);
+          alert('Signup successful! Please log in.');
+        },
+        error: (error) => {
+          console.error('Signup failed:', error);
+        }
+      });
     } else {
       console.log('Form is invalid');
       this.signupForm.markAllAsTouched();
-      // tell why the form is invalid
       const errors = this.signupForm.errors;
       if (errors) {
         console.log('Form errors:', errors);

@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { HelloService } from '../services/hello.service';
+import { HelloService } from '../../services/hello.service';
 
 @Component({
   selector: 'app-hello',
@@ -17,5 +17,5 @@ export class HelloComponent {
       next: (data) => this.message = data.message,
       error: (err) => console.error('API error:', err)
     });
-}
+  }
 }

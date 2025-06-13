@@ -12,4 +12,9 @@ export const appConfig: ApplicationConfig = {
   ],
 };
 
-export const backendHost: string = "localhost:8000";
+export var backendHost: string = "localhost:8000"; // Default backend host
+// check ENV variable for backend host
+if (typeof process !== 'undefined' && process.env && process.env["EASY_INVESTING_A_BACKEND_HOST"]) {
+  backendHost = process.env["EASY_INVESTING_A_BACKEND_HOST"];
+}
+export const apiUrl: string = `http://${backendHost}/api/v1/`;
