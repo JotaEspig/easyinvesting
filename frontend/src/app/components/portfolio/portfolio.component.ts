@@ -50,6 +50,18 @@ export class PortfolioComponent {
         if (this.assets.length === 0) {
           this.message = 'Your portfolio is empty.';
         }
+
+        for (let asset of this.assets) {
+          this.apiService.getRequest<{market_price: number}>(`asset/${asset.id}/realtime`, options).subscribe({
+            next: (data) => {
+              asset.market_price = data.market_price;
+              console.log(`Updated market price for asset ${asset.id}: ${asset.market_price}`);
+            },
+            error: (err) => {
+              console.error(`Failed to fetch market price for asset ${asset.id}:`, err);
+            }
+          });
+        }
       },
       error: (err) => {
         alert('Failed to load portfolio. Please try again later.');

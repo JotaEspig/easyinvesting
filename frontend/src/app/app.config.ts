@@ -1,6 +1,7 @@
 import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
+import { ENV } from '@env';
 
 import { routes } from './app.routes';
 
@@ -12,9 +13,4 @@ export const appConfig: ApplicationConfig = {
   ],
 };
 
-export var backendHost: string = "localhost:8000"; // Default backend host
-// check ENV variable for backend host
-if (typeof process !== 'undefined' && process.env && process.env["EASY_INVESTING_A_BACKEND_HOST"]) {
-  backendHost = process.env["EASY_INVESTING_A_BACKEND_HOST"];
-}
-export const apiUrl: string = `http://${backendHost}/api/v1/`;
+export const apiUrl = `${ENV.backendurl}/api/v1/`;

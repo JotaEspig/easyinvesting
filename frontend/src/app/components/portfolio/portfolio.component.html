@@ -6,11 +6,13 @@
     <div class="col-md-4" *ngFor="let item of assets">
       <div class="card h-100">
         <div class="card-body">
-          <h5 class="card-title">{{ item.name }}</h5>
-          <h6 class="card-subtitle mb-2 text-muted">{{ item.code }}</h6>
+          <h5 class="card-title">{{ item.code }}</h5>
           <p class="card-text">
             Price: {{ item.currency === 0 ? "R$" : "$" }}
             {{ item.hold_avg_price * item.hold_quantity }}
+          </p>
+          <p class="card-text" style="color: green;">
+            Market price: {{ item.market_price }}
           </p>
         </div>
       </div>

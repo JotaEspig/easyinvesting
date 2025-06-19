@@ -8,10 +8,6 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func hello(c echo.Context) error {
-	return c.JSON(http.StatusOK, types.JsonMap{"message": "Hello from Go Echo!"})
-}
-
 func helloAuth(c echo.Context) error {
 	claims, err := utils.GetClaimsFromContext(c)
 	if err != nil {

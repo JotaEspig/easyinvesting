@@ -20,6 +20,9 @@
     "types": [
       "node"
     ],
+    "paths": {
+      "@env": ["./src/app/.env.ts", "./src/app/.env.default.ts"]
+    }
   },
   "angularCompilerOptions": {
     "enableI18nLegacyMessageIdFormat": false,

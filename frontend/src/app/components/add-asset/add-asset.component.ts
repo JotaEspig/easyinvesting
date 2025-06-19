@@ -12,19 +12,20 @@ export class AddAssetComponent {
   @Output() assetCreated = new EventEmitter<any>();
 
   asset = {
-    name: '',
     code: '',
     currency: 0,
   };
 
   isAssetValid(): boolean {
-    return this.asset.name.trim() !== '' &&
-           this.asset.code.trim() !== '' &&
+    return this.asset.code.trim() !== '' &&
            this.asset.currency >= 0 && this.asset.currency <= 1;
   }
 
   onSubmit() {
+    if (typeof this.asset.currency === 'string') {
+      this.asset.currency = parseInt(this.asset.currency, 10);
+    }
     this.assetCreated.emit({ ...this.asset });
-    this.asset = { name: '', code: '', currency: 0 };
+    this.asset = { code: '', currency: 0 };
   }
 }

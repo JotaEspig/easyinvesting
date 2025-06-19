@@ -8,7 +8,6 @@ import (
 )
 
 var AvailableRoutes []types.Route = []types.Route{
-	{Path: "/hello", Method: types.MethodGET, Fn: hello},
 	{Path: "/helloauth", Method: types.MethodGET, Fn: helloAuth,
 		Middlewares: []echo.MiddlewareFunc{config.JWTMiddleware()}},
 }

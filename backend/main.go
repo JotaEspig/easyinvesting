@@ -2,12 +2,13 @@ package main
 
 import (
 	"easyinvesting/config"
+	"easyinvesting/pkg/models"
 	"easyinvesting/pkg/server"
 	"fmt"
 )
 
 func main() {
-	config.InitDB()
+	models.Migrate()
 	defer func() {
 		db, _ := config.DB.DB()
 		if err := db.Close(); err != nil {

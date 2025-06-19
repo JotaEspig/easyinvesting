@@ -1,7 +1,6 @@
 package config
 
 import (
-	"easyinvesting/pkg/models"
 	"errors"
 	"os"
 
@@ -12,6 +11,10 @@ import (
 var DB *gorm.DB
 
 func InitDB() {
+	if DB != nil {
+		return // DB is already initialized
+	}
+
 	var err error
 	dbString := os.Getenv("EASYINVESTING_DB_STRING")
 	isProd := os.Getenv("EASYINVESTING_PROD") == "true"
@@ -28,12 +31,6 @@ func InitDB() {
 		DisableForeignKeyConstraintWhenMigrating: true,
 	})
 	if err != nil {
-		panic(err)
-	}
-
-	if err = DB.AutoMigrate(
-		models.AllModels...,
-	); err != nil {
 		panic(err)
 	}
 }

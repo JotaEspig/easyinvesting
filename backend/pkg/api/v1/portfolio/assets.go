@@ -35,6 +35,14 @@ func AddUserAsset(c echo.Context) error {
 		})
 	}
 
+	err = ensureAssetOnMarket(c, &a)
+	if err != nil {
+		c.Logger().Errorf("Failed to ensure asset on market: %v", err.Error())
+		return c.JSON(http.StatusInternalServerError, types.JsonMap{
+			"message": "Asset not on the market",
+		})
+	}
+
 	a.UserID = claims.UserID
 	if err := config.DB.Create(&a).Error; err != nil {
 		c.Logger().Errorf("Failed to create asset: %v", err.Error())
@@ -98,4 +106,50 @@ func GetUserAssets(c echo.Context) error {
 		"message": "assets retrieved successfully",
 		"assets":  assetsMaps,
 	})
+}
+
+func ensureAssetOnMarket(c echo.Context, a *investiments.Asset) error {
+	var assetOnMarket investiments.AssetOnMarket
+	if err := config.DB.Where("code = ?", a.Code).First(&assetOnMarket).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			// check if the asset exists in the market
+			client := &http.Client{}
+			req, err := http.NewRequest("GET", "https://brapi.dev/api/quote/"+a.Code, nil)
+			if err != nil {
+				c.Logger().Errorf("Failed to create request: %v", err)
+				return echo.NewHTTPError(http.StatusInternalServerError, "Failed to create request")
+			}
+			req.Header.Set("Authorization", "Bearer "+config.BRAPI_TOKEN)
+			resp, err := client.Do(req)
+			if err != nil {
+				c.Logger().Errorf("Failed to fetch real-time data: %v", err)
+				return echo.NewHTTPError(http.StatusInternalServerError, "Failed to fetch real-time data")
+			}
+			defer resp.Body.Close()
+
+			var data investiments.Response
+			if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+				c.Logger().Errorf("Failed to decode response: %v", err)
+				return echo.NewHTTPError(http.StatusInternalServerError, "Failed to decode response")
+			}
+
+			if len(data.Results) == 0 {
+				c.Logger().Errorf("No real-time data found for the asset: %s", a.Code)
+				return c.JSON(http.StatusNotFound, types.JsonMap{"error": "No real-time data found for the asset"})
+			}
+
+			assetOnMarket = investiments.AssetOnMarket{Code: a.Code}
+			if err := config.DB.Create(&assetOnMarket).Error; err != nil {
+				c.Logger().Errorf("Failed to create asset on market: %v", err.Error())
+				return err
+			}
+			c.Logger().Infof("Asset on market created: %s", a.Code)
+		} else {
+			c.Logger().Errorf("Failed to check asset on market: %v", err.Error())
+			return err
+		}
+	}
+
+	a.AssetOnMarket = assetOnMarket
+	return nil
 }

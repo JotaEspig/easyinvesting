@@ -19,25 +19,24 @@ const (
 
 type Asset struct {
 	gorm.Model
-	Name               string    `json:"name" gorm:"not null"`
-	Code               string    `json:"code" gorm:"not null;unique"`
-	AssetType          uint8     `json:"asset_type" gorm:"not null"`
-	Currency           uint8     `json:"currency" gorm:"not null"`
-	UserID             uint      `json:"user_id" gorm:"not null"`
-	User               user.User `json:"user" gorm:"foreignKey:UserID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
-	CachedHoldAvgPrice float64   `json:"-" gorm:"default:0"`
-	CachedHoldQuantity uint      `json:"-" gorm:"default:0"`
-	CacheDate          time.Time `json:"-" gorm:"default:CURRENT_TIMESTAMP"`
+	Code               string        `json:"code" gorm:"not null;unique"`
+	AssetOnMarket      AssetOnMarket `json:"asset_on_market" gorm:"foreignKey:Code;references:Code;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	AssetType          uint8         `json:"asset_type" gorm:"not null"`
+	Currency           uint8         `json:"currency" gorm:"not null"`
+	UserID             uint          `json:"user_id" gorm:"not null"`
+	User               user.User     `json:"user" gorm:"foreignKey:UserID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	CachedHoldAvgPrice float64       `json:"-" gorm:"default:0"`
+	CachedHoldQuantity uint          `json:"-" gorm:"default:0"`
+	CacheDate          time.Time     `json:"-" gorm:"default:CURRENT_TIMESTAMP"`
 }
 
 func (a Asset) IsUserInputValid() bool {
-	return a.Name != "" && a.Code != "" && a.AssetType == AssetTypeStock && a.Currency >= CurrencyBRL && a.Currency <= CurrencyUSD
+	return a.Code != "" && a.AssetType == AssetTypeStock && a.Currency >= CurrencyBRL && a.Currency <= CurrencyUSD
 }
 
 func (a Asset) ToMap() types.JsonMap {
 	return types.JsonMap{
 		"id":             a.ID,
-		"name":           a.Name,
 		"code":           a.Code,
 		"asset_type":     a.AssetType,
 		"currency":       a.Currency,
