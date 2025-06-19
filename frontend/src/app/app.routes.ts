@@ -4,6 +4,7 @@ import { LoginComponent } from './components/login/login.component';
 import { SignupComponent } from './components/signup/signup.component';
 import { HelloComponent } from './components/hello/hello.component';
 import { HelloauthComponent } from './components/helloauth/helloauth.component';
+import { PortfolioComponent } from './components/portfolio/portfolio.component';
 
 export const routes: Routes = [
   { path: '', component: HomeComponent },
@@ -11,4 +12,6 @@ export const routes: Routes = [
   { path: 'signup', component: SignupComponent },
   { path: 'hello', component: HelloComponent },
   { path: 'helloauth', component: HelloauthComponent },
+  { path: 'portfolio', component: PortfolioComponent },
+  { path: '**', redirectTo: '/' }
 ];

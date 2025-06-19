@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common'
 import { ApiService } from '../../services/api.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-login',
@@ -15,9 +16,8 @@ import { ApiService } from '../../services/api.service';
 })
 export class LoginComponent {
   loginForm: FormGroup;
-  token: string = '';
 
-  constructor(private fb: FormBuilder, private apiService: ApiService) {
+  constructor(private fb: FormBuilder, private apiService: ApiService, private router: Router) {
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(6)]],
@@ -27,7 +27,6 @@ export class LoginComponent {
   onSubmit(): void {
     if (this.loginForm.valid) {
       const { email, password } = this.loginForm.value;
-      // Handle login logic here
       const userData = {
         "email": email,
         "password": password
@@ -38,8 +37,8 @@ export class LoginComponent {
       this.apiService.postRequest<{token: string}>("login", userData).subscribe({
         next: (data) => {
           console.log('Login successful:', data);
-          alert('Login successful! Token: ' + data.token);
           localStorage.setItem('token', data.token);
+          this.router.navigate(['/helloauth']); // TODO just temporary
         },
         error: (error) => {
           console.error('Login failed:', error);

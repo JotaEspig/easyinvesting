@@ -1,0 +1,42 @@
+<p class="h4 mb-4">Portfolio works!</p>
+<p>{{ message }}</p>
+
+<div class="container">
+  <div class="row g-4">
+    <div class="col-md-4" *ngFor="let item of assets">
+      <div class="card h-100">
+        <div class="card-body">
+          <h5 class="card-title">{{ item.name }}</h5>
+          <h6 class="card-subtitle mb-2 text-muted">{{ item.code }}</h6>
+          <p class="card-text">
+            Price: {{ item.currency === 0 ? "R$" : "$" }}
+            {{ item.hold_avg_price * item.hold_quantity }}
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Button toggle modal -->
+<div class="container mt-4">
+  <button class="btn btn-primary" (click)="modalInstance?.show()">
+    Add New Asset
+  </button>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="addAssetModal" tabindex="-1" aria-labelledby="addAssetModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="addAssetModalLabel">Add New Asset</h5>
+        <button type="button" class="btn-close" aria-label="Close" (click)="modalInstance?.hide()"></button>
+      </div>
+      <div class="modal-body">
+        <app-add-asset (assetCreated)="onAssetCreated($event)"></app-add-asset>
+      </div>
+    </div>
+  </div>
+</div>
+

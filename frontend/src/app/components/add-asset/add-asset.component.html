@@ -1,0 +1,18 @@
+<form (ngSubmit)="onSubmit()" #assetForm="ngForm" class="mb-4">
+  <div class="mb-3">
+    <label class="form-label">Name</label>
+    <input type="text" class="form-control" [(ngModel)]="asset.name" name="name" required />
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Code</label>
+    <input type="text" class="form-control" [(ngModel)]="asset.code" name="code" required />
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Currency</label>
+    <select class="form-select" [(ngModel)]="asset.currency" name="currency" required>
+      <option [value]="0">BRL (R$)</option>
+      <option [value]="1">USD ($)</option>
+    </select>
+  </div>
+  <button type="submit" class="btn btn-primary">Add Asset</button>
+</form>

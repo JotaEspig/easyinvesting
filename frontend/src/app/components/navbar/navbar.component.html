@@ -6,20 +6,21 @@
     </button>
     <div class="collapse navbar-collapse" id="navbarNav">
       <ul class="navbar-nav me-auto align-items-center">
-        <li class="nav-item">
-          <a class="nav-link" routerLink="/hello" routerLinkActive="active">Hello</a>
-        </li>
-        <li class="nav-item">
+        <li class="nav-item" *ngIf="auth.isAuthenticated()">
           <a class="nav-link" routerLink="/helloauth" routerLinkActive="active">HelloAuth</a>
         </li>
+        <li class="nav-item" *ngIf="auth.isAuthenticated()">
+          <a class="nav-link" routerLink="/portfolio" routerLinkActive="active">Portfolio</a>
       </ul>
       <ul class="navbar-nav align-items-center">
-        <li class="nav-item">
+        <li class="nav-item" *ngIf="!auth.isAuthenticated()">
           <a class="nav-link" routerLink="/login" routerLinkActive="active">Login</a>
         </li>
-        <li class="nav-item">
+        <li class="nav-item" *ngIf="!auth.isAuthenticated()">
           <a class="nav-link" routerLink="/signup" routerLinkActive="active">Signup</a>
         </li>
+        <li class="nav-item" *ngIf="auth.isAuthenticated()">
+          <a class="nav-link" tabindex="0" (click)="askForLogout()" (keydown.enter)="askForLogout()">Logout</a>
       </ul>
     </div>
   </div>

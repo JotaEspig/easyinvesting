@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common'
 import { ApiService } from '../../services/api.service';
+import {Router} from "@angular/router"
 
 @Component({
   selector: 'app-signup',
@@ -16,7 +17,7 @@ import { ApiService } from '../../services/api.service';
 export class SignupComponent {
   signupForm: FormGroup;
 
-  constructor(private fb: FormBuilder, private apiService: ApiService) {
+  constructor(private fb: FormBuilder, private apiService: ApiService, private router: Router) {
     this.signupForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(6)]],
@@ -42,7 +43,8 @@ export class SignupComponent {
       this.apiService.postRequest("signup", userData).subscribe({
         next: (response) => {
           console.log('Signup successful:', response);
-          alert('Signup successful! Please log in.');
+          this.router.navigate(['/login']);
+
         },
         error: (error) => {
           console.error('Signup failed:', error);
