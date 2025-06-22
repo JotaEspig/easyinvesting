@@ -98,6 +98,15 @@ export class PortfolioComponent {
     this.apiService.postRequest<{message: string, asset: Asset}>("asset/add", asset, options).subscribe({
       next: (data) => {
         alert('Asset added successfully!');
+        this.apiService.getRequest<{market_price: number}>(`asset/${data.asset.id}/realtime`, options).subscribe({
+          next: (data2) => {
+            data.asset.market_price = data2.market_price;
+            console.log(`Updated market price for asset ${data.asset.id}: ${data.asset.market_price}`);
+          },
+          error: (err) => {
+            console.error(`Failed to fetch market price for asset ${data.asset.id}:`, err);
+          }
+        });
         this.assets.push(data.asset);
         this.modalInstance?.hide();
       },

@@ -6,7 +6,9 @@ import (
 	"easyinvesting/pkg/models/investiments"
 	"easyinvesting/pkg/types"
 	"encoding/json"
+	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/labstack/echo/v4"
 	"gorm.io/gorm"
@@ -144,6 +146,21 @@ func ensureAssetOnMarket(c echo.Context, a *investiments.Asset) error {
 				return err
 			}
 			c.Logger().Infof("Asset on market created: %s", a.Code)
+
+			// create daily asset price
+			quote := data.Results[0]
+			dailyAssetPrice := investiments.DailyAssetPrice{
+				AssetCode:     quote.Symbol,
+				AssetOnMarket: investiments.AssetOnMarket{Code: quote.Symbol},
+				Price:         quote.RegularMarketPrice,
+				Date:          time.Now().Format("2006-01-02"),
+			}
+			if err := config.DB.Create(&dailyAssetPrice).Error; err != nil {
+				if err != gorm.ErrDuplicatedKey {
+					return fmt.Errorf("error creating daily asset price for %s: %w", a.Code, err)
+				}
+			}
+
 		} else {
 			c.Logger().Errorf("Failed to check asset on market: %v", err.Error())
 			return err

@@ -29,6 +29,7 @@ func InitDB() {
 		SkipDefaultTransaction:                   true,
 		PrepareStmt:                              true,
 		DisableForeignKeyConstraintWhenMigrating: true,
+		TranslateError:                           true,
 	})
 	if err != nil {
 		panic(err)

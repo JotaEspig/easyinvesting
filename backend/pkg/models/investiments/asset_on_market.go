@@ -5,6 +5,7 @@ import (
 	"easyinvesting/pkg/types"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -22,10 +23,10 @@ func (AssetOnMarket) TableName() string {
 
 type DailyAssetPrice struct {
 	gorm.Model
-	AssetCode     string        `json:"asset_code" gorm:"not null"`
+	AssetCode     string        `json:"asset_code" gorm:"not null;uniqueIndex:idx_code_date"`
 	AssetOnMarket AssetOnMarket `json:"asset_on_market" gorm:"foreignKey:AssetCode;references:Code;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 	Price         float64       `json:"price" gorm:"not null;default:0"`
-	Date          string        `json:"date" gorm:"not null;uniqueIndex:idx_asset_date"`
+	Date          string        `json:"date" gorm:"not null;uniqueIndex:idx_code_date"`
 }
 
 func (dap DailyAssetPrice) ToMap() types.JsonMap {
@@ -56,36 +57,46 @@ func UpdateAllAssetsOnMarket() error {
 		return nil
 	}
 
-	codesMerged := ""
-	for i, asset := range assets {
-		if i > 0 && i < len(assets)-1 {
-			codesMerged += ","
-		}
-		codesMerged += asset.Code
-	}
-
 	client := &http.Client{}
-	req, err := http.NewRequest("GET", "https://brapi.dev/api/quote/"+codesMerged, nil)
-	if err != nil {
-		return err
-	}
-	req.Header.Set("Authorization", "Bearer "+config.BRAPI_TOKEN)
-	resp, err := client.Do(req)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
+	for _, asset := range assets {
+		url := "https://brapi.dev/api/quote/" + asset.Code
+		req, err := http.NewRequest("GET", url, nil)
+		if err != nil {
+			return fmt.Errorf("error creating request for %s: %w", asset.Code, err)
+		}
+		req.Header.Set("Authorization", "Bearer "+config.BRAPI_TOKEN)
 
-	var data Response
-	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return err
-	}
+		resp, err := client.Do(req)
+		if err != nil {
+			return fmt.Errorf("error performing request for %s: %w", asset.Code, err)
+		}
+		defer resp.Body.Close()
 
-	if len(data.Results) == 0 {
-		return errors.New("no real-time data found for the assets")
-	}
+		var data Response
+		if resp.StatusCode != http.StatusOK {
+			errorData := struct {
+				Error   bool   `json:"error"`
+				Message string `json:"message"`
+			}{}
 
-	for _, quote := range data.Results {
+			if err := json.NewDecoder(resp.Body).Decode(&errorData); err != nil {
+				return fmt.Errorf("error decoding error response for %s: %w", asset.Code, err)
+			}
+			return errors.New(errorData.Message)
+		}
+
+		if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+			return fmt.Errorf("error decoding response for %s: %w", asset.Code, err)
+		}
+
+		if len(data.Results) == 0 {
+			// This might happen if an asset code doesn't return data,
+			// you can choose to skip or return an error.
+			// For now, let's just log and continue for other assets.
+			continue
+		}
+
+		quote := data.Results[0]
 		dailyAssetPrice := DailyAssetPrice{
 			AssetCode:     quote.Symbol,
 			AssetOnMarket: AssetOnMarket{Code: quote.Symbol},
@@ -93,7 +104,9 @@ func UpdateAllAssetsOnMarket() error {
 			Date:          time.Now().Format("2006-01-02"),
 		}
 		if err := config.DB.Create(&dailyAssetPrice).Error; err != nil {
-			return err
+			if err != gorm.ErrDuplicatedKey {
+				return fmt.Errorf("error creating daily asset price for %s: %w", asset.Code, err)
+			}
 		}
 	}
 
