@@ -41,7 +41,9 @@ export class LoginComponent {
           this.router.navigate(['/helloauth']); // TODO just temporary
         },
         error: (error) => {
-          console.error('Login failed:', error);
+          alert('Login failed');
+          console.error('Login error:', error);
+          this.loginForm.reset();
         }
       });
     } else {

@@ -37,6 +37,24 @@ export class PortfolioComponent {
     }
   }
 
+  updatePrices(): void {
+    const options: Object = {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+      }
+    };
+    this.apiService.postRequest<{message: string}>("realtimeupdate", {}, options).subscribe({
+      next: (data) => {
+        alert(data.message);
+        this.updateAssets();
+      },
+      error: (err) => {
+        alert('Failed to update prices. Please try again later.');
+        console.error(err);
+      }
+    });
+  }
+
   updateAssets(): void {
     const options: Object = {
       headers: {
