@@ -6,9 +6,11 @@ import { ApiService } from '../../services/api.service';
 import { CommonModule } from '@angular/common';
 import { AddAssetComponent } from '../add-asset/add-asset.component';
 import { Modal } from 'bootstrap';
+import { MessageService } from 'primeng/api';
 
 @Component({
   selector: 'app-portfolio',
+  standalone: true,
   imports: [CommonModule, AddAssetComponent],
   templateUrl: './portfolio.component.html',
   styleUrl: './portfolio.component.css'
@@ -18,11 +20,20 @@ export class PortfolioComponent {
   assets: Asset[] = [];
   modalInstance?: Modal;
 
-  constructor(private apiService: ApiService, private router: Router, public auth: AuthService) {}
+  constructor(
+    private apiService: ApiService,
+    private router: Router,
+    public auth: AuthService,
+    private messageService: MessageService
+  ) {}
 
   ngOnInit(): void {
     if (!this.auth.isAuthenticated()) {
-      alert('You are not logged in. Please log in to access this page.');
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Not Logged In',
+        detail: 'You are not logged in. Please log in to access this page.'
+      });
       this.router.navigate(['/login']);
       return;
     }
@@ -45,11 +56,19 @@ export class PortfolioComponent {
     };
     this.apiService.postRequest<{message: string}>("realtimeupdate", {}, options).subscribe({
       next: (data) => {
-        alert(data.message);
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Update Successful',
+          detail: data.message
+        });
         this.updateAssets();
       },
       error: (err) => {
-        alert('Failed to update prices. Please try again later.');
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Update Failed',
+          detail: 'Failed to update prices. Please try again later.'
+        });
         console.error(err);
       }
     });
@@ -82,7 +101,11 @@ export class PortfolioComponent {
         }
       },
       error: (err) => {
-        alert('Failed to load portfolio. Please try again later.');
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Load Failed',
+          detail: 'Failed to load portfolio. Please try again later.'
+        });
         console.error(err);
       }
     });
@@ -97,7 +120,11 @@ export class PortfolioComponent {
     };
     this.apiService.postRequest<{message: string, asset: Asset}>("asset/add", asset, options).subscribe({
       next: (data) => {
-        alert('Asset added successfully!');
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Asset Added',
+          detail: 'Asset added successfully!'
+        });
         this.apiService.getRequest<{market_price: number}>(`asset/${data.asset.id}/realtime`, options).subscribe({
           next: (data2) => {
             data.asset.market_price = data2.market_price;
@@ -111,7 +138,11 @@ export class PortfolioComponent {
         this.modalInstance?.hide();
       },
       error: (err) => {
-        alert('Failed to add asset.' + (err.error?.message || 'Please try again later.'));
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Add Failed',
+          detail: 'Failed to add asset.' + (err.error?.message || 'Please try again later.')
+        });
       }
     });
   }
