@@ -1,5 +1,7 @@
-<p class="h4 mb-4">Portfolio works!</p>
-<p>{{ message }}</p>
+<div class="container mt-4">
+  <h1 class="text-center">Portfolio</h1>
+  <p class="text-center">Manage your assets and track their performance.</p>
+</div>
 
 <div class="container">
   <div class="row g-4">
@@ -8,13 +10,24 @@
         <div class="card-body">
           <h5 class="card-title">{{ item.code }}</h5>
           <p class="card-text">
-            Price: {{ item.currency === 0 ? "R$" : "$" }}
+            Position: {{ item.currency === 0 ? "R$" : "$" }}
             {{ item.hold_avg_price * item.hold_quantity }}
           </p>
           <p class="card-text" style="color: green;">
-            Market price: {{ item.market_price }}
+            Market price: {{ item.currency === 0 ? "R$" : "$" }} {{ item.market_price }}
+          </p>
+          <p class="card-text" *ngIf="item.hold_quantity > 0">
+            Profitability:
+            <span [ngStyle]="getProfitabilityStyle(item)">{{ item.profitability }}%</span>
           </p>
         </div>
+        <a
+          (click)="modalEditAssetInstance?.show()" class="btn btn-outline-primary stretched-link"
+          (click)="selectAsset(item)"
+          tabindex="0"
+          >
+          Add Entry
+        </a>
       </div>
     </div>
   </div>
@@ -22,7 +35,7 @@
 
 <!-- Button toggle modal -->
 <div class="container mt-4">
-  <button class="btn btn-primary" (click)="modalInstance?.show()">
+  <button class="btn btn-primary" (click)="modalAddAssetInstance?.show()">
     Add New Asset
   </button>
 </div>
@@ -33,13 +46,13 @@
   </button>
 </div>
 
-<!-- Modal -->
+<!-- Modal Add Asset -->
 <div class="modal fade" id="addAssetModal" tabindex="-1" aria-labelledby="addAssetModalLabel" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="addAssetModalLabel">Add New Asset</h5>
-        <button type="button" class="btn-close" aria-label="Close" (click)="modalInstance?.hide()"></button>
+        <button type="button" class="btn-close" aria-label="Close" (click)="modalAddAssetInstance?.hide()"></button>
       </div>
       <div class="modal-body">
         <app-add-asset (assetCreated)="onAssetCreated($event)"></app-add-asset>
@@ -48,3 +61,21 @@
   </div>
 </div>
 
+<!-- Modal Edit Asset -->
+<div class="modal fade" id="editAssetModal" tabindex="-1" aria-labelledby="editAssetModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="editAssetModalLabel">
+          Edit {{ this.currentlySelectedAsset ? this.currentlySelectedAsset.code : "Asset" }}
+        </h5>
+        <button type="button" class="btn-close" aria-label="Close" (click)="modalEditAssetInstance?.hide()"></button>
+      </div>
+      <div class="modal-body">
+        <app-edit-asset
+          (assetEntryCreated)="onAssetUpdated($event)"
+        ></app-edit-asset>
+      </div>
+    </div>
+  </div>
+</div>

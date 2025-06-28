@@ -10,5 +10,5 @@
       <option [value]="1">USD ($)</option>
     </select>
   </div>
-  <button type="submit" class="btn btn-primary">Add Asset</button>
+  <button type="submit" class="btn btn-primary" [disabled]="!isAssetValid()">Add Asset</button>
 </form>

@@ -7,4 +7,5 @@ export interface Asset {
   hold_avg_price: number;
   hold_quantity: number;
   market_price: number;
+  profitability: number;
 }

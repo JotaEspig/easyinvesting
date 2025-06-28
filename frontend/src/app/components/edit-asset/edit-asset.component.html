@@ -1,0 +1,19 @@
+<form (ngSubmit)="onSubmit()" #assetForm="ngForm" class="mb-4">
+  <div class="mb-3">
+    <label class="form-label">Type of operation</label>
+    <!-- select true or false -->
+    <select class="form-select" [(ngModel)]="assetEntry.type" name="type" required>
+      <option [value]=0>Buy</option>
+      <option [value]=1>Sell</option>
+    </select>
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Price per asset</label>
+    <input type="number" class="form-control" [(ngModel)]="assetEntry.price" name="price" required />
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Quantity</label>
+    <input type="number" class="form-control" [(ngModel)]="assetEntry.quantity" name="quantity" required />
+  </div>
+  <button type="submit" class="btn btn-primary" [disabled]="!isAssetEntryValid()">Add entry</button>
+</form>
