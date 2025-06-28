@@ -1,7 +1,7 @@
 FROM golang:1.22 as builder
 
 WORKDIR /app
-COPY go/main.go .
+COPY . .
 
 RUN go build -o app .
 
