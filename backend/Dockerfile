@@ -1,4 +1,4 @@
-FROM golang:1.24.3 as builder
+FROM golang:1.24.3 AS builder
 
 WORKDIR /app
 COPY . .
@@ -25,9 +25,5 @@ EXPOSE 443
 ENV EASYINVESTING_PORT=8080
 ENV EASYINVESTING_DB_STRING=/app/easyinvesting.db
 ENV ENV=PRODUCTION
-
-# Change these to your actual secrets
-ENV EASYINVESTING_SECRET_KEY=default_secret_key
-ENV BRAPI_TOKEN=default_brapi_token
 
 CMD ["/bin/bash", "-c", "/usr/local/bin/app & apache2ctl -D FOREGROUND"]
