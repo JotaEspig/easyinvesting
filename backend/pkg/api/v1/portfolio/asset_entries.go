@@ -49,6 +49,27 @@ func AddUserAssetEntry(c echo.Context) error {
 		})
 	}
 
+	// Verify if it's a sell entry and if the user has enough quantity
+	if entry.Type == investiments.AssetEntryTypeSell {
+		var asset investiments.Asset
+		err = config.DB.Model(&investiments.Asset{}).
+			Select("cached_hold_quantity").
+			Where("id = ? AND user_id = ?", entry.AssetID, claims.UserID).
+			First(&asset).Error
+		if err != nil {
+			c.Logger().Errorf("Failed to fetch asset for sell entry: %v", err.Error())
+			return c.JSON(http.StatusInternalServerError, types.JsonMap{
+				"message": "failed to fetch asset for sell entry",
+			})
+		}
+		if asset.CachedHoldQuantity < entry.Quantity {
+			c.Logger().Errorf("Insufficient quantity for sell entry: %v", asset.CachedHoldQuantity)
+			return c.JSON(http.StatusBadRequest, types.JsonMap{
+				"message": "insufficient quantity for sell entry",
+			})
+		}
+	}
+
 	tx := config.DB.Begin()
 	if err := tx.Create(&entry).Error; err != nil {
 		defer tx.Rollback()

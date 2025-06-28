@@ -19,7 +19,7 @@ const (
 
 type Asset struct {
 	gorm.Model
-	Code               string        `json:"code" gorm:"not null;unique"`
+	Code               string        `json:"code" gorm:"not null"`
 	AssetOnMarket      AssetOnMarket `json:"asset_on_market" gorm:"foreignKey:Code;references:Code;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 	AssetType          uint8         `json:"asset_type" gorm:"not null"`
 	Currency           uint8         `json:"currency" gorm:"not null"`
