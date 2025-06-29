@@ -2,6 +2,7 @@ package config
 
 import (
 	"errors"
+	"log"
 	"os"
 
 	"gorm.io/driver/sqlite"
@@ -32,6 +33,7 @@ func InitDB() {
 		TranslateError:                           true,
 	})
 	if err != nil {
+		log.Fatalf("failed to connect to database: %s", dbString)
 		panic(err)
 	}
 }
