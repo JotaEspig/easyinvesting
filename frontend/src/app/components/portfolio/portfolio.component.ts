@@ -180,7 +180,6 @@ export class PortfolioComponent {
     }
 
     entry.asset_id = this.currentlySelectedAsset.id;
-    entry.Date = new Date().toISOString();
 
     const options: Object = {
       headers: {
@@ -197,6 +196,7 @@ export class PortfolioComponent {
         });
         this.unselectAsset();
         this.modalEditAssetInstance?.hide();
+        this.updateAssets();
       },
       error: (err) => {
         this.messageService.add({

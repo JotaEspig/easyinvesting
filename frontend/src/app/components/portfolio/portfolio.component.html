@@ -13,6 +13,9 @@
             Position: {{ item.currency === 0 ? "R$" : "$" }}
             {{ item.hold_avg_price * item.hold_quantity }}
           </p>
+          <p class="card-text">
+            Quantity: {{ item.hold_quantity }}
+          </p>
           <p class="card-text" style="color: green;">
             Market price: {{ item.currency === 0 ? "R$" : "$" }} {{ item.market_price }}
           </p>

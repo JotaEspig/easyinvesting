@@ -5,7 +5,7 @@ export interface AssetEntry {
   price: number;
   quantity: number;
   type: number;
-  Date: string;
+  date: string;
   asset_id: number;
   asset: Asset;
 }

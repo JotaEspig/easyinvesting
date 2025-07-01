@@ -14,6 +14,7 @@ export class EditAssetComponent {
     type: -1,
     price: 0,
     quantity: 0,
+    date: new Date().toISOString().split('T')[0]
   };
 
   isAssetEntryValid(): boolean {
@@ -30,7 +31,14 @@ export class EditAssetComponent {
     if (typeof this.assetEntry.type === 'string') {
       this.assetEntry.type = parseInt(this.assetEntry.type, 10);
     }
+
+    this.assetEntry.date = new Date(this.assetEntry.date).toISOString();
     this.assetEntryCreated.emit({ ...this.assetEntry });
-    this.assetEntry = { type: -1, price: 0, quantity: 0 };
+    this.assetEntry = {
+      type: -1,
+      price: 0,
+      quantity: 0,
+      date: new Date().toISOString().split('T')[0]
+    };
   }
 }
