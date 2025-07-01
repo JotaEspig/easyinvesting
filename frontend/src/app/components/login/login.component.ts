@@ -3,6 +3,7 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
 import { CommonModule } from '@angular/common'
 import { ApiService } from '../../services/api.service';
 import { Router } from '@angular/router';
+import { MessageService } from 'primeng/api';
 
 @Component({
   selector: 'app-login',
@@ -17,7 +18,12 @@ import { Router } from '@angular/router';
 export class LoginComponent {
   loginForm: FormGroup;
 
-  constructor(private fb: FormBuilder, private apiService: ApiService, private router: Router) {
+  constructor(
+    private fb: FormBuilder,
+    private apiService: ApiService,
+    private router: Router,
+    private messageService: MessageService
+  ) {
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(6)]],
@@ -36,12 +42,20 @@ export class LoginComponent {
 
       this.apiService.postRequest<{token: string}>("login", userData).subscribe({
         next: (data) => {
-          console.log('Login successful:', data);
           localStorage.setItem('token', data.token);
-          this.router.navigate(['/helloauth']); // TODO just temporary
+          this.router.navigate(['/portfolio']);
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Login Successful',
+            detail: 'You have successfully logged in'
+          });
         },
         error: (error) => {
-          alert('Login failed');
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Login Failed',
+            detail: 'Invalid email or password. Please try again.'
+          });
           console.error('Login error:', error);
           this.loginForm.reset();
         }

@@ -2,7 +2,8 @@ import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common'
 import { ApiService } from '../../services/api.service';
-import {Router} from "@angular/router"
+import { Router } from "@angular/router"
+import { MessageService } from 'primeng/api';
 
 @Component({
   selector: 'app-signup',
@@ -17,7 +18,12 @@ import {Router} from "@angular/router"
 export class SignupComponent {
   signupForm: FormGroup;
 
-  constructor(private fb: FormBuilder, private apiService: ApiService, private router: Router) {
+  constructor(
+    private fb: FormBuilder,
+    private apiService: ApiService,
+    private router: Router,
+    private messageService: MessageService
+  ) {
     this.signupForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(6)]],
@@ -42,12 +48,24 @@ export class SignupComponent {
 
       this.apiService.postRequest("signup", userData).subscribe({
         next: (response) => {
-          console.log('Signup successful:', response);
           this.router.navigate(['/login']);
-
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Signup Successful',
+            detail: 'You have successfully signed up. Please log in.'
+          });
         },
         error: (error) => {
           console.error('Signup failed:', error);
+          let details = 'An error occurred during signup. Please try again.';
+          if (error.status === 409) {
+            details = 'Email already exists. Please use a different email.';
+          }
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Signup Failed',
+            detail: details
+          });
         }
       });
     } else {

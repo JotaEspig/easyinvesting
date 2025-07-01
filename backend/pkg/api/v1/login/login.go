@@ -82,6 +82,12 @@ func signup(c echo.Context) error {
 
 	if err := config.DB.Create(&u).Error; err != nil {
 		c.Logger().Errorf("Failed to create user: %v", err)
+		if err == gorm.ErrDuplicatedKey {
+			return c.JSON(http.StatusConflict, types.JsonMap{
+				"message": "user already exists",
+			})
+		}
+
 		return c.JSON(http.StatusInternalServerError, types.JsonMap{
 			"message": "failed to create user",
 		})

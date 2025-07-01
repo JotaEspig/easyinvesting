@@ -15,9 +15,6 @@
       <small *ngIf="loginForm.get('password')?.errors?.['required']">Password is required.</small>
       <small *ngIf="loginForm.get('password')?.errors?.['minlength']">Password must be at least 6 characters.</small>
     </div>
-    <div style="margin-top: 3px;" class="d-grid gap-2 d-md-flex justify-content-md-end">
-      <button class="btn btn-sm btn-outline-danger" style="margin-top: 2px;">Forgot my password</button>
-    </div>
   </div>
 
   <div class="d-grid gap-2 d-md-flex justify-content-md-end btn-group" style="margin-top: 15px;">
