@@ -13,8 +13,4 @@ func init() {
 	AllAvailableRoutes = append(AllAvailableRoutes, other.AvailableRoutes...)
 	AllAvailableRoutes = append(AllAvailableRoutes, login.AvailableRoutes...)
 	AllAvailableRoutes = append(AllAvailableRoutes, portfolio.AvailableRoutes...)
-
-	for i := range AllAvailableRoutes {
-		AllAvailableRoutes[i].Path = "/api/v1" + AllAvailableRoutes[i].Path
-	}
 }
