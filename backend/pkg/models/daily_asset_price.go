@@ -2,9 +2,8 @@ package models
 
 import (
 	"easyinvesting/config"
+	"easyinvesting/pkg/clients"
 	"easyinvesting/pkg/types"
-	"encoding/json"
-	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -49,7 +48,7 @@ func UpdateAllAssetsOnMarket() error {
 		return nil
 	}
 
-	client := &http.Client{}
+	client := clients.NewBrApi(&http.Client{})
 	for _, asset := range assets {
 		var dayOfLastAssetUpdate string
 		config.DB().Model(&DailyAssetPrice{}).
@@ -62,44 +61,11 @@ func UpdateAllAssetsOnMarket() error {
 			continue
 		}
 
-		url := "https://brapi.dev/api/quote/" + asset.Code
-		req, err := http.NewRequest("GET", url, nil)
-		if err != nil {
-			return fmt.Errorf("error creating request for %s: %w", asset.Code, err)
-		}
-		req.Header.Set("Authorization", "Bearer "+config.BRAPI_TOKEN)
-
-		resp, err := client.Do(req)
-		if err != nil {
-			return fmt.Errorf("error performing request for %s: %w", asset.Code, err)
-		}
-		defer resp.Body.Close()
-
-		var data Response
-		if resp.StatusCode != http.StatusOK {
-			errorData := struct {
-				Error   bool   `json:"error"`
-				Message string `json:"message"`
-			}{}
-
-			if err := json.NewDecoder(resp.Body).Decode(&errorData); err != nil {
-				return fmt.Errorf("error decoding error response for %s: %w", asset.Code, err)
-			}
-			return errors.New(errorData.Message)
+		quote, err := client.GetQuote(asset.Code)
+		if err != nil && err != clients.BrApiErrNoResults {
+			return fmt.Errorf("error fetching quote for %s: %w", asset.Code, err)
 		}
 
-		if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-			return fmt.Errorf("error decoding response for %s: %w", asset.Code, err)
-		}
-
-		if len(data.Results) == 0 {
-			// This might happen if an asset code doesn't return data,
-			// you can choose to skip or return an error.
-			// For now, let's just log and continue for other assets.
-			continue
-		}
-
-		quote := data.Results[0]
 		dailyAssetPrice := DailyAssetPrice{
 			AssetCode:     quote.Symbol,
 			AssetOnMarket: AssetOnMarket{Code: quote.Symbol},

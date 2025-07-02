@@ -21,10 +21,7 @@ func NewUserRepository(db *gorm.DB) UserRepository {
 }
 
 func (r *userRepository) Save(user *models.User) error {
-	if err := r.db.Save(user).Error; err != nil {
-		return err
-	}
-	return nil
+	return r.db.Save(user).Error
 }
 
 func (r *userRepository) FindByID(id uint) (*models.User, error) {

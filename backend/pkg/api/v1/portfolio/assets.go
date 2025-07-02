@@ -3,6 +3,8 @@ package portfolio
 import (
 	"easyinvesting/config"
 	"easyinvesting/pkg/api/v1/utils"
+	"easyinvesting/pkg/clients"
+	"easyinvesting/pkg/dtos"
 	"easyinvesting/pkg/models"
 	"easyinvesting/pkg/types"
 	"encoding/json"
@@ -53,9 +55,18 @@ func AddUserAsset(c echo.Context) error {
 		})
 	}
 	c.Logger().Infof("Asset created successfully: %v", a)
+	aDTO := dtos.AssetDTO{
+		ID:                 a.ID,
+		Code:               a.Code,
+		AssetType:          a.AssetType,
+		Currency:           a.Currency,
+		UserID:             a.UserID,
+		CachedHoldAvgPrice: a.CachedHoldAvgPrice,
+		CachedHoldQuantity: a.CachedHoldQuantity,
+	}
 	return c.JSON(http.StatusCreated, types.JsonMap{
 		"message": "asset created successfully",
-		"asset":   a.ToMap(),
+		"asset":   aDTO.ToMap(),
 	})
 }
 
@@ -78,9 +89,18 @@ func GetUserAsset(c echo.Context) error {
 	}
 
 	c.Logger().Infof("Asset retrieved successfully: %v", a)
+	aDTO := dtos.AssetDTO{
+		ID:                 a.ID,
+		Code:               a.Code,
+		AssetType:          a.AssetType,
+		Currency:           a.Currency,
+		UserID:             a.UserID,
+		CachedHoldAvgPrice: a.CachedHoldAvgPrice,
+		CachedHoldQuantity: a.CachedHoldQuantity,
+	}
 	return c.JSON(http.StatusOK, types.JsonMap{
 		"message": "asset retrieved successfully",
-		"asset":   a.ToMap(),
+		"asset":   aDTO.ToMap(),
 	})
 }
 
@@ -100,7 +120,16 @@ func GetUserAssets(c echo.Context) error {
 
 	assetsMaps := make([]types.JsonMap, len(assets))
 	for i, a := range assets {
-		assetsMaps[i] = a.ToMap()
+		aDTO := dtos.AssetDTO{
+			ID:                 a.ID,
+			Code:               a.Code,
+			AssetType:          a.AssetType,
+			Currency:           a.Currency,
+			UserID:             a.UserID,
+			CachedHoldAvgPrice: a.CachedHoldAvgPrice,
+			CachedHoldQuantity: a.CachedHoldQuantity,
+		}
+		assetsMaps[i] = aDTO.ToMap()
 	}
 
 	c.Logger().Infof("Assets retrieved successfully: %d assets", len(assets))
@@ -113,57 +142,41 @@ func GetUserAssets(c echo.Context) error {
 func ensureAssetOnMarket(c echo.Context, a *models.Asset) error {
 	var assetOnMarket models.AssetOnMarket
 	if err := config.DB().Where("code = ?", a.Code).First(&assetOnMarket).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			// check if the asset exists in the market
-			client := &http.Client{}
-			req, err := http.NewRequest("GET", "https://brapi.dev/api/quote/"+a.Code, nil)
-			if err != nil {
-				c.Logger().Errorf("Failed to create request: %v", err)
-				return echo.NewHTTPError(http.StatusInternalServerError, "Failed to create request")
-			}
-			req.Header.Set("Authorization", "Bearer "+config.BRAPI_TOKEN)
-			resp, err := client.Do(req)
-			if err != nil {
-				c.Logger().Errorf("Failed to fetch real-time data: %v", err)
-				return echo.NewHTTPError(http.StatusInternalServerError, "Failed to fetch real-time data")
-			}
-			defer resp.Body.Close()
-
-			var data models.Response
-			if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-				c.Logger().Errorf("Failed to decode response: %v", err)
-				return echo.NewHTTPError(http.StatusInternalServerError, "Failed to decode response")
-			}
-
-			if len(data.Results) == 0 {
-				c.Logger().Errorf("No real-time data found for the asset: %s", a.Code)
-				return c.JSON(http.StatusNotFound, types.JsonMap{"error": "No real-time data found for the asset"})
-			}
-
-			assetOnMarket = models.AssetOnMarket{Code: a.Code}
-			if err := config.DB().Create(&assetOnMarket).Error; err != nil {
-				c.Logger().Errorf("Failed to create asset on market: %v", err.Error())
-				return err
-			}
-			c.Logger().Infof("Asset on market created: %s", a.Code)
-
-			// create daily asset price
-			quote := data.Results[0]
-			dailyAssetPrice := models.DailyAssetPrice{
-				AssetCode:     quote.Symbol,
-				AssetOnMarket: models.AssetOnMarket{Code: quote.Symbol},
-				Price:         quote.RegularMarketPrice,
-				Date:          time.Now().Format("2006-01-02"),
-			}
-			if err := config.DB().Create(&dailyAssetPrice).Error; err != nil {
-				if err != gorm.ErrDuplicatedKey {
-					return fmt.Errorf("error creating daily asset price for %s: %w", a.Code, err)
-				}
-			}
-
-		} else {
+		if err != gorm.ErrRecordNotFound {
 			c.Logger().Errorf("Failed to check asset on market: %v", err.Error())
 			return err
+		}
+
+		client := clients.NewBrApi(&http.Client{})
+		quote, err := client.GetQuote(a.Code)
+
+		if err != nil {
+			if err == clients.BrApiErrNoResults {
+				c.Logger().Errorf("Asset not found on market: %s", a.Code)
+				return echo.NewHTTPError(http.StatusNotFound, "Asset not found on market")
+			}
+			c.Logger().Errorf("Failed to fetch asset quote: %v", err.Error())
+			return echo.NewHTTPError(http.StatusInternalServerError, "Failed to fetch asset quote")
+		}
+
+		assetOnMarket = models.AssetOnMarket{Code: a.Code}
+		if err := config.DB().Create(&assetOnMarket).Error; err != nil {
+			c.Logger().Errorf("Failed to create asset on market: %v", err.Error())
+			return err
+		}
+		c.Logger().Infof("Asset on market created: %s", a.Code)
+
+		// create daily asset price
+		dailyAssetPrice := models.DailyAssetPrice{
+			AssetCode:     quote.Symbol,
+			AssetOnMarket: models.AssetOnMarket{Code: quote.Symbol},
+			Price:         quote.RegularMarketPrice,
+			Date:          time.Now().Format("2006-01-02"),
+		}
+		if err := config.DB().Create(&dailyAssetPrice).Error; err != nil {
+			if err != gorm.ErrDuplicatedKey {
+				return fmt.Errorf("error creating daily asset price for %s: %w", a.Code, err)
+			}
 		}
 	}
 
