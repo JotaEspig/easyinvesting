@@ -3,7 +3,7 @@ package portfolio
 import (
 	"easyinvesting/config"
 	"easyinvesting/pkg/api/v1/utils"
-	"easyinvesting/pkg/models/investiments"
+	"easyinvesting/pkg/models"
 	"easyinvesting/pkg/types"
 	"encoding/json"
 	"net/http"
@@ -20,7 +20,7 @@ func AddUserAssetEntry(c echo.Context) error {
 		return c.JSON(http.StatusUnauthorized, types.JsonMap{"error": "Unauthorized"})
 	}
 
-	var entry investiments.AssetEntry
+	var entry models.AssetEntry
 	if err := json.NewDecoder(c.Request().Body).Decode(&entry); err != nil {
 		c.Logger().Errorf("Failed to decode asset entry: %v", err.Error())
 		return c.JSON(http.StatusBadRequest, types.JsonMap{
@@ -37,7 +37,7 @@ func AddUserAssetEntry(c echo.Context) error {
 
 	// Verify if user has this asset
 	var exists bool
-	err = config.DB.Model(&investiments.Asset{}).
+	err = config.DB().Model(&models.Asset{}).
 		Select("1").
 		Where("id = ? AND user_id = ?", entry.AssetID, claims.UserID).
 		Limit(1).
@@ -50,9 +50,9 @@ func AddUserAssetEntry(c echo.Context) error {
 	}
 
 	// Verify if it's a sell entry and if the user has enough quantity
-	if entry.Type == investiments.AssetEntryTypeSell {
-		var asset investiments.Asset
-		err = config.DB.Model(&investiments.Asset{}).
+	if entry.Type == models.AssetEntryTypeSell {
+		var asset models.Asset
+		err = config.DB().Model(&models.Asset{}).
 			Select("cached_hold_quantity").
 			Where("id = ? AND user_id = ?", entry.AssetID, claims.UserID).
 			First(&asset).Error
@@ -70,7 +70,7 @@ func AddUserAssetEntry(c echo.Context) error {
 		}
 	}
 
-	tx := config.DB.Begin()
+	tx := config.DB().Begin()
 	if err := tx.Create(&entry).Error; err != nil {
 		defer tx.Rollback()
 		c.Logger().Errorf("Failed to create asset entry: %v", err.Error())
@@ -80,8 +80,8 @@ func AddUserAssetEntry(c echo.Context) error {
 	}
 
 	// Update asset's cached hold average price and quantity
-	if entry.Type == investiments.AssetEntryTypeBuy {
-		err = tx.Model(&investiments.Asset{}).Where("id = ?", entry.AssetID).
+	if entry.Type == models.AssetEntryTypeBuy {
+		err = tx.Model(&models.Asset{}).Where("id = ?", entry.AssetID).
 			UpdateColumns(map[string]interface{}{
 				"cached_hold_avg_price": gorm.Expr(
 					"((cached_hold_avg_price * cached_hold_quantity) + ?) / (cached_hold_quantity + ?)",
@@ -90,8 +90,8 @@ func AddUserAssetEntry(c echo.Context) error {
 				"cached_hold_quantity": gorm.Expr("cached_hold_quantity + ?", entry.Quantity),
 				"cache_date":           gorm.Expr("CURRENT_TIMESTAMP"),
 			}).Error
-	} else if entry.Type == investiments.AssetEntryTypeSell {
-		err = tx.Model(&investiments.Asset{}).Where("id = ?", entry.AssetID).
+	} else if entry.Type == models.AssetEntryTypeSell {
+		err = tx.Model(&models.Asset{}).Where("id = ?", entry.AssetID).
 			UpdateColumns(map[string]interface{}{
 				"cached_hold_avg_price": gorm.Expr(
 					"((cached_hold_avg_price * cached_hold_quantity) - ?) / (cached_hold_quantity - ?)",
@@ -124,8 +124,8 @@ func GetUserAssetEntry(c echo.Context) error {
 	}
 
 	entryID := c.Param("id")
-	var entry investiments.AssetEntry
-	err = config.DB.Table("asset_entries").
+	var entry models.AssetEntry
+	err = config.DB().Table("asset_entries").
 		Select("asset_entries.*").
 		Joins("INNER JOIN assets ON asset_entries.asset_id = assets.id").
 		Where("asset_entries.id = ? AND assets.user_id = ?", entryID, claims.UserID).

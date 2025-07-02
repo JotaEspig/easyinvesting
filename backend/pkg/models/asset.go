@@ -1,7 +1,6 @@
-package investiments
+package models
 
 import (
-	"easyinvesting/pkg/models/user"
 	"easyinvesting/pkg/types"
 	"time"
 
@@ -24,7 +23,7 @@ type Asset struct {
 	AssetType          uint8         `json:"asset_type" gorm:"not null"`
 	Currency           uint8         `json:"currency" gorm:"not null"`
 	UserID             uint          `json:"user_id" gorm:"not null"`
-	User               user.User     `json:"user" gorm:"foreignKey:UserID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	User               User          `json:"user" gorm:"foreignKey:UserID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 	CachedHoldAvgPrice float64       `json:"-" gorm:"default:0"`
 	CachedHoldQuantity uint          `json:"-" gorm:"default:0"`
 	CacheDate          time.Time     `json:"-" gorm:"default:CURRENT_TIMESTAMP"`

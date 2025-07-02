@@ -1,4 +1,4 @@
-package investiments
+package models
 
 import (
 	"easyinvesting/pkg/types"

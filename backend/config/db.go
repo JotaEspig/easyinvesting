@@ -9,11 +9,11 @@ import (
 	"gorm.io/gorm"
 )
 
-var DB *gorm.DB
+var db *gorm.DB
 
-func InitDB() {
-	if DB != nil {
-		return // DB is already initialized
+func DB() *gorm.DB {
+	if db != nil {
+		return db // DB is already initialized
 	}
 
 	var err error
@@ -26,7 +26,7 @@ func InitDB() {
 		panic(errors.New("EASYINVESTING_DB_STRING is not set"))
 	}
 
-	DB, err = gorm.Open(sqlite.Open(dbString), &gorm.Config{
+	db, err = gorm.Open(sqlite.Open(dbString), &gorm.Config{
 		SkipDefaultTransaction:                   true,
 		PrepareStmt:                              true,
 		DisableForeignKeyConstraintWhenMigrating: true,
@@ -36,4 +36,6 @@ func InitDB() {
 		log.Fatalf("failed to connect to database: %s", dbString)
 		panic(err)
 	}
+
+	return db
 }

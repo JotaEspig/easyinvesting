@@ -3,7 +3,7 @@ package portfolio
 import (
 	"easyinvesting/config"
 	"easyinvesting/pkg/api/v1/utils"
-	"easyinvesting/pkg/models/investiments"
+	"easyinvesting/pkg/models"
 	"easyinvesting/pkg/types"
 	"encoding/json"
 	"fmt"
@@ -22,7 +22,7 @@ func AddUserAsset(c echo.Context) error {
 		return c.JSON(http.StatusUnauthorized, types.JsonMap{"error": "Unauthorized"})
 	}
 
-	var a investiments.Asset
+	var a models.Asset
 	if err := json.NewDecoder(c.Request().Body).Decode(&a); err != nil {
 		c.Logger().Errorf("Failed to decode asset: %v", err.Error())
 		return c.JSON(http.StatusBadRequest, types.JsonMap{
@@ -46,7 +46,7 @@ func AddUserAsset(c echo.Context) error {
 	}
 
 	a.UserID = claims.UserID
-	if err := config.DB.Create(&a).Error; err != nil {
+	if err := config.DB().Create(&a).Error; err != nil {
 		c.Logger().Errorf("Failed to create asset: %v", err.Error())
 		return c.JSON(http.StatusInternalServerError, types.JsonMap{
 			"message": "failed to create asset",
@@ -66,8 +66,8 @@ func GetUserAsset(c echo.Context) error {
 	}
 
 	assetID := c.Param("id")
-	var a investiments.Asset
-	if err := config.DB.Where("id = ? AND user_id = ?", assetID, claims.UserID).First(&a).Error; err != nil {
+	var a models.Asset
+	if err := config.DB().Where("id = ? AND user_id = ?", assetID, claims.UserID).First(&a).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return c.JSON(http.StatusNotFound, types.JsonMap{"message": "asset not found"})
 		}
@@ -90,8 +90,8 @@ func GetUserAssets(c echo.Context) error {
 		return c.JSON(http.StatusUnauthorized, types.JsonMap{"error": "Unauthorized"})
 	}
 
-	var assets []investiments.Asset
-	if err := config.DB.Where("user_id = ?", claims.UserID).Find(&assets).Error; err != nil {
+	var assets []models.Asset
+	if err := config.DB().Where("user_id = ?", claims.UserID).Find(&assets).Error; err != nil {
 		c.Logger().Errorf("Failed to get assets: %v", err.Error())
 		return c.JSON(http.StatusInternalServerError, types.JsonMap{
 			"message": "failed to get assets",
@@ -110,9 +110,9 @@ func GetUserAssets(c echo.Context) error {
 	})
 }
 
-func ensureAssetOnMarket(c echo.Context, a *investiments.Asset) error {
-	var assetOnMarket investiments.AssetOnMarket
-	if err := config.DB.Where("code = ?", a.Code).First(&assetOnMarket).Error; err != nil {
+func ensureAssetOnMarket(c echo.Context, a *models.Asset) error {
+	var assetOnMarket models.AssetOnMarket
+	if err := config.DB().Where("code = ?", a.Code).First(&assetOnMarket).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			// check if the asset exists in the market
 			client := &http.Client{}
@@ -129,7 +129,7 @@ func ensureAssetOnMarket(c echo.Context, a *investiments.Asset) error {
 			}
 			defer resp.Body.Close()
 
-			var data investiments.Response
+			var data models.Response
 			if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
 				c.Logger().Errorf("Failed to decode response: %v", err)
 				return echo.NewHTTPError(http.StatusInternalServerError, "Failed to decode response")
@@ -140,8 +140,8 @@ func ensureAssetOnMarket(c echo.Context, a *investiments.Asset) error {
 				return c.JSON(http.StatusNotFound, types.JsonMap{"error": "No real-time data found for the asset"})
 			}
 
-			assetOnMarket = investiments.AssetOnMarket{Code: a.Code}
-			if err := config.DB.Create(&assetOnMarket).Error; err != nil {
+			assetOnMarket = models.AssetOnMarket{Code: a.Code}
+			if err := config.DB().Create(&assetOnMarket).Error; err != nil {
 				c.Logger().Errorf("Failed to create asset on market: %v", err.Error())
 				return err
 			}
@@ -149,13 +149,13 @@ func ensureAssetOnMarket(c echo.Context, a *investiments.Asset) error {
 
 			// create daily asset price
 			quote := data.Results[0]
-			dailyAssetPrice := investiments.DailyAssetPrice{
+			dailyAssetPrice := models.DailyAssetPrice{
 				AssetCode:     quote.Symbol,
-				AssetOnMarket: investiments.AssetOnMarket{Code: quote.Symbol},
+				AssetOnMarket: models.AssetOnMarket{Code: quote.Symbol},
 				Price:         quote.RegularMarketPrice,
 				Date:          time.Now().Format("2006-01-02"),
 			}
-			if err := config.DB.Create(&dailyAssetPrice).Error; err != nil {
+			if err := config.DB().Create(&dailyAssetPrice).Error; err != nil {
 				if err != gorm.ErrDuplicatedKey {
 					return fmt.Errorf("error creating daily asset price for %s: %w", a.Code, err)
 				}

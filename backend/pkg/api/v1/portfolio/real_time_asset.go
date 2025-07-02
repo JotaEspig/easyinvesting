@@ -3,7 +3,7 @@ package portfolio
 import (
 	"easyinvesting/config"
 	"easyinvesting/pkg/api/v1/utils"
-	"easyinvesting/pkg/models/investiments"
+	"easyinvesting/pkg/models"
 	"easyinvesting/pkg/types"
 	"net/http"
 	"time"
@@ -22,8 +22,8 @@ func GetRealTimeAssetData(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, types.JsonMap{"error": "Asset code is required"})
 	}
 
-	var asset investiments.Asset
-	if err := config.DB.Select("code", "currency").Where("id = ? AND user_id = ?", assetID, claims.UserID).First(&asset).Error; err != nil {
+	var asset models.Asset
+	if err := config.DB().Select("code", "currency").Where("id = ? AND user_id = ?", assetID, claims.UserID).First(&asset).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return c.JSON(http.StatusNotFound, types.JsonMap{"error": "Asset not found"})
 		}
@@ -31,8 +31,8 @@ func GetRealTimeAssetData(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, types.JsonMap{"error": "Failed to fetch asset"})
 	}
 
-	var dailyPrice investiments.DailyAssetPrice
-	if err := config.DB.Where("asset_code = ? AND date = ?", asset.Code, time.Now().Format("2006-01-02")).First(&dailyPrice).Error; err != nil {
+	var dailyPrice models.DailyAssetPrice
+	if err := config.DB().Where("asset_code = ? AND date = ?", asset.Code, time.Now().Format("2006-01-02")).First(&dailyPrice).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return c.JSON(http.StatusNotFound, types.JsonMap{"error": "Daily price not found for today"})
 		}
@@ -51,7 +51,7 @@ func UpdateRealTimeAssetsData(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusUnauthorized, types.JsonMap{"error": "Unauthorized"})
 	}
-	if err := investiments.UpdateAllAssetsOnMarket(); err != nil {
+	if err := models.UpdateAllAssetsOnMarket(); err != nil {
 		c.Logger().Errorf("Failed to update real-time assets data: %v", err)
 		return c.JSON(http.StatusInternalServerError, types.JsonMap{"error": "Failed to update real-time assets data"})
 	}

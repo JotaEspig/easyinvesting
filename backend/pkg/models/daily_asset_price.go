@@ -1,4 +1,4 @@
-package investiments
+package models
 
 import (
 	"easyinvesting/config"
@@ -39,7 +39,7 @@ type Response struct {
 
 func UpdateAllAssetsOnMarket() error {
 	var assets []AssetOnMarket
-	if err := config.DB.Select("code").Find(&assets).Error; err != nil {
+	if err := config.DB().Select("code").Find(&assets).Error; err != nil {
 		if err != gorm.ErrRecordNotFound {
 			return err
 		}
@@ -52,7 +52,7 @@ func UpdateAllAssetsOnMarket() error {
 	client := &http.Client{}
 	for _, asset := range assets {
 		var dayOfLastAssetUpdate string
-		config.DB.Model(&DailyAssetPrice{}).
+		config.DB().Model(&DailyAssetPrice{}).
 			Select("MAX(date)").
 			Where("asset_code = ?", asset.Code).
 			Scan(&dayOfLastAssetUpdate)
@@ -106,7 +106,7 @@ func UpdateAllAssetsOnMarket() error {
 			Price:         quote.RegularMarketPrice,
 			Date:          time.Now().Format("2006-01-02"),
 		}
-		if err := config.DB.Create(&dailyAssetPrice).Error; err != nil {
+		if err := config.DB().Create(&dailyAssetPrice).Error; err != nil {
 			if err != gorm.ErrDuplicatedKey {
 				return fmt.Errorf("error creating daily asset price for %s: %w", asset.Code, err)
 			}
