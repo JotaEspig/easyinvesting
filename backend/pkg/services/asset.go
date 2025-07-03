@@ -50,7 +50,7 @@ func (s *assetService) GetPaginatedByUserID(
 		return nil, 0, fmt.Errorf("Failed to get paginated assets: %w", err)
 	}
 
-	assetDTOs := make([]*dtos.AssetDTO, 0, len(assets))
+	assetDTOs := make([]*dtos.AssetDTO, len(assets))
 	for i, asset := range assets {
 		assetDTOs[i] = modelToDTO(asset)
 	}

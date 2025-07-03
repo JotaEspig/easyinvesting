@@ -91,8 +91,15 @@ func (controller AssetController) GetPaginatedUserAssets() echo.HandlerFunc {
 
 		pageStr := c.QueryParam("page")
 		pageSizeStr := c.QueryParam("size")
-		if pageStr == "" || pageSizeStr == "" {
-			return c.JSON(http.StatusBadRequest, map[string]string{"message": "Page and size parameters are required"})
+		// if pageStr == "" || pageSizeStr == "" {
+		// 	return c.JSON(http.StatusBadRequest, map[string]string{"message": "Page and size parameters are required"})
+		// }
+		// This below is temporary, in future, use the above one
+		if pageStr == "" {
+			pageStr = "1"
+		}
+		if pageSizeStr == "" {
+			pageSizeStr = "10"
 		}
 
 		page, err := strconv.Atoi(pageStr)

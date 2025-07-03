@@ -38,7 +38,7 @@ func (r *assetRepository) GetPaginatedByUserID(
 	var assets []*models.Asset
 	var total int64
 
-	query := r.db.Where("user_id = ?", userID)
+	query := r.db.Model(&models.Asset{}).Where("user_id = ?", userID)
 	if err := query.Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
