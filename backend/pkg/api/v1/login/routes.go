@@ -2,19 +2,19 @@ package login
 
 import (
 	"easyinvesting/config"
-	"easyinvesting/pkg/controllers"
-	"easyinvesting/pkg/repositories"
-	"easyinvesting/pkg/services"
+	"easyinvesting/pkg/controller"
+	"easyinvesting/pkg/repository"
+	"easyinvesting/pkg/service"
 	"easyinvesting/pkg/types"
 )
 
 var AvailableRoutes []types.Route
-var userController *controllers.UserController
+var userController *controller.UserController
 
 func init() {
-	repo := repositories.NewUserRepository(config.DB())
-	service := services.NewUserService(repo)
-	userController = controllers.NewUserController(service)
+	repo := repository.NewUserRepository(config.DB())
+	service := service.NewUserService(repo)
+	userController = controller.NewUserController(service)
 
 	AvailableRoutes = []types.Route{
 		{Method: "POST", Path: "/login", Fn: userController.Login()},

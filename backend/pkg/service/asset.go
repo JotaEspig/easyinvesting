@@ -1,27 +1,27 @@
-package services
+package service
 
 import (
-	"easyinvesting/pkg/dtos"
-	"easyinvesting/pkg/models"
-	"easyinvesting/pkg/repositories"
+	"easyinvesting/pkg/dto"
+	"easyinvesting/pkg/model"
+	"easyinvesting/pkg/repository"
 	"fmt"
 )
 
 type AssetService interface {
-	Save(assetDTO *dtos.AssetDTO) error
-	FindByCodeAndUserID(code string, userID uint) (*dtos.AssetDTO, error)
-	GetPaginatedByUserID(userID uint, page, pageSize int) ([]*dtos.AssetDTO, int64, error)
+	Save(assetDTO *dto.AssetDTO) error
+	FindByCodeAndUserID(code string, userID uint) (*dto.AssetDTO, error)
+	GetPaginatedByUserID(userID uint, page, pageSize int) ([]*dto.AssetDTO, int64, error)
 }
 
 type assetService struct {
-	assetRepository repositories.AssetRepository
+	assetRepository repository.AssetRepository
 }
 
-func NewAssetService(assetRepository repositories.AssetRepository) AssetService {
+func NewAssetService(assetRepository repository.AssetRepository) AssetService {
 	return &assetService{assetRepository: assetRepository}
 }
 
-func (s *assetService) Save(assetDTO *dtos.AssetDTO) error {
+func (s *assetService) Save(assetDTO *dto.AssetDTO) error {
 	if !assetDTO.IsUserInputValid() {
 		return fmt.Errorf("Invalid asset data: %v", assetDTO.ToMap())
 	}
@@ -34,7 +34,7 @@ func (s *assetService) Save(assetDTO *dtos.AssetDTO) error {
 	return nil
 }
 
-func (s *assetService) FindByCodeAndUserID(code string, userID uint) (*dtos.AssetDTO, error) {
+func (s *assetService) FindByCodeAndUserID(code string, userID uint) (*dto.AssetDTO, error) {
 	asset, err := s.assetRepository.FindByCodeAndUserID(code, userID)
 	if err != nil {
 		return nil, fmt.Errorf("Asset not found: %w", err)
@@ -44,24 +44,24 @@ func (s *assetService) FindByCodeAndUserID(code string, userID uint) (*dtos.Asse
 
 func (s *assetService) GetPaginatedByUserID(
 	userID uint, page, pageSize int,
-) ([]*dtos.AssetDTO, int64, error) {
+) ([]*dto.AssetDTO, int64, error) {
 	assets, total, err := s.assetRepository.GetPaginatedByUserID(userID, page, pageSize)
 	if err != nil {
 		return nil, 0, fmt.Errorf("Failed to get paginated assets: %w", err)
 	}
 
-	assetDTOs := make([]*dtos.AssetDTO, len(assets))
+	assetDTOs := make([]*dto.AssetDTO, len(assets))
 	for i, asset := range assets {
 		assetDTOs[i] = modelToDTO(asset)
 	}
 	return assetDTOs, total, nil
 }
 
-func modelToDTO(asset *models.Asset) *dtos.AssetDTO {
+func modelToDTO(asset *model.Asset) *dto.AssetDTO {
 	if asset == nil {
 		return nil
 	}
-	return &dtos.AssetDTO{
+	return &dto.AssetDTO{
 		ID:                 asset.ID,
 		Code:               asset.Code,
 		AssetType:          asset.AssetType,
@@ -72,11 +72,11 @@ func modelToDTO(asset *models.Asset) *dtos.AssetDTO {
 	}
 }
 
-func dtoToModel(assetDTO *dtos.AssetDTO) *models.Asset {
+func dtoToModel(assetDTO *dto.AssetDTO) *model.Asset {
 	if assetDTO == nil {
 		return nil
 	}
-	asset := &models.Asset{
+	asset := &model.Asset{
 		Code:               assetDTO.Code,
 		AssetType:          assetDTO.AssetType,
 		Currency:           assetDTO.Currency,

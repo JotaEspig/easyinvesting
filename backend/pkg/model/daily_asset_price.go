@@ -1,8 +1,8 @@
-package models
+package model
 
 import (
 	"easyinvesting/config"
-	"easyinvesting/pkg/clients"
+	"easyinvesting/pkg/client"
 	"easyinvesting/pkg/types"
 	"fmt"
 	"log"
@@ -48,7 +48,7 @@ func UpdateAllAssetsOnMarket() error {
 		return nil
 	}
 
-	client := clients.NewBrApi(&http.Client{})
+	brApiClient := client.NewBrApi(&http.Client{})
 	for _, asset := range assets {
 		var dayOfLastAssetUpdate string
 		config.DB().Model(&DailyAssetPrice{}).
@@ -61,8 +61,8 @@ func UpdateAllAssetsOnMarket() error {
 			continue
 		}
 
-		quote, err := client.GetQuote(asset.Code)
-		if err != nil && err != clients.BrApiErrNoResults {
+		quote, err := brApiClient.GetQuote(asset.Code)
+		if err != nil && err != client.BrApiErrNoResults {
 			return fmt.Errorf("error fetching quote for %s: %w", asset.Code, err)
 		}
 

@@ -1,20 +1,26 @@
-package controllers
+package controller
 
 import (
-	"easyinvesting/pkg/controllers/utils"
-	"easyinvesting/pkg/dtos"
-	"easyinvesting/pkg/services"
+	"easyinvesting/config"
+	"easyinvesting/pkg/client"
+	"easyinvesting/pkg/controller/utils"
+	"easyinvesting/pkg/dto"
+	"easyinvesting/pkg/model"
+	"easyinvesting/pkg/service"
+	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/labstack/echo/v4"
+	"gorm.io/gorm"
 )
 
 type AssetController struct {
-	assetService services.AssetService
+	assetService service.AssetService
 }
 
-func NewAssetController(assetService services.AssetService) *AssetController {
+func NewAssetController(assetService service.AssetService) *AssetController {
 	return &AssetController{assetService: assetService}
 }
 
@@ -25,7 +31,7 @@ func (controller AssetController) AddUserAsset() echo.HandlerFunc {
 			return c.JSON(http.StatusUnauthorized, map[string]string{"message": "Unauthorized"})
 		}
 
-		var asset dtos.AssetDTO
+		var asset dto.AssetDTO
 		if err := c.Bind(&asset); err != nil {
 			c.Logger().Errorf("Failed to decode asset: %v", err.Error())
 			return c.JSON(http.StatusBadRequest, map[string]string{
@@ -40,7 +46,13 @@ func (controller AssetController) AddUserAsset() echo.HandlerFunc {
 			})
 		}
 
-		// TODO: err = controller.assetService.EnsureAssetOnMarket(c, &asset)
+		// TODO use this instead: err = controller.assetService.EnsureAssetOnMarket(c, &asset)
+		if err := ensureAssetOnMarket(c, &asset); err != nil {
+			c.Logger().Errorf("Failed to ensure asset on market: %v", err.Error())
+			return c.JSON(http.StatusInternalServerError, map[string]string{
+				"message": "failed to ensure asset on market",
+			})
+		}
 
 		asset.UserID = claims.UserID
 		if err := controller.assetService.Save(&asset); err != nil {
@@ -130,4 +142,50 @@ func (controller AssetController) GetPaginatedUserAssets() echo.HandlerFunc {
 			"size":   pageSize,
 		})
 	}
+}
+
+// CHANGE THIS IN FUTURE
+func ensureAssetOnMarket(c echo.Context, a *dto.AssetDTO) error {
+	var assetOnMarket model.AssetOnMarket
+	if err := config.DB().Where("code = ?", a.Code).First(&assetOnMarket).Error; err != nil {
+		if err != gorm.ErrRecordNotFound {
+			c.Logger().Errorf("Failed to check asset on market: %v", err.Error())
+			return err
+		}
+
+		brApiClient := client.NewBrApi(&http.Client{})
+		quote, err := brApiClient.GetQuote(a.Code)
+
+		if err != nil {
+			if err == client.BrApiErrNoResults {
+				c.Logger().Errorf("Asset not found on market: %s", a.Code)
+				return echo.NewHTTPError(http.StatusNotFound, "Asset not found on market")
+			}
+			c.Logger().Errorf("Failed to fetch asset quote: %v", err.Error())
+			return echo.NewHTTPError(http.StatusInternalServerError, "Failed to fetch asset quote")
+		}
+
+		assetOnMarket = model.AssetOnMarket{Code: a.Code}
+		if err := config.DB().Create(&assetOnMarket).Error; err != nil {
+			c.Logger().Errorf("Failed to create asset on market: %v", err.Error())
+			return err
+		}
+		c.Logger().Infof("Asset on market created: %s", a.Code)
+
+		// create daily asset price
+		dailyAssetPrice := model.DailyAssetPrice{
+			AssetCode:     quote.Symbol,
+			AssetOnMarket: model.AssetOnMarket{Code: quote.Symbol},
+			Price:         quote.RegularMarketPrice,
+			Date:          time.Now().Format("2006-01-02"),
+		}
+		if err := config.DB().Create(&dailyAssetPrice).Error; err != nil {
+			if err != gorm.ErrDuplicatedKey {
+				return fmt.Errorf("error creating daily asset price for %s: %w", a.Code, err)
+			}
+		}
+	}
+
+	// a.AssetOnMarket = assetOnMarket
+	return nil
 }

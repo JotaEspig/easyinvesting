@@ -1,4 +1,4 @@
-package dtos
+package dto
 
 const (
 	AssetTypeStock uint8 = 0

@@ -2,21 +2,21 @@ package portfolio
 
 import (
 	"easyinvesting/config"
-	"easyinvesting/pkg/controllers"
-	"easyinvesting/pkg/repositories"
-	"easyinvesting/pkg/services"
+	"easyinvesting/pkg/controller"
+	"easyinvesting/pkg/repository"
+	"easyinvesting/pkg/service"
 	"easyinvesting/pkg/types"
 
 	"github.com/labstack/echo/v4"
 )
 
 var AvailableRoutes []types.Route
-var assetController *controllers.AssetController
+var assetController *controller.AssetController
 
 func init() {
-	repo := repositories.NewAssetRepository(config.DB())
-	service := services.NewAssetService(repo)
-	assetController = controllers.NewAssetController(service)
+	repo := repository.NewAssetRepository(config.DB())
+	service := service.NewAssetService(repo)
+	assetController = controller.NewAssetController(service)
 
 	AvailableRoutes = []types.Route{
 		{Method: "POST", Path: "/asset/add", Fn: assetController.AddUserAsset(), Middlewares: []echo.MiddlewareFunc{config.JWTMiddleware()}},

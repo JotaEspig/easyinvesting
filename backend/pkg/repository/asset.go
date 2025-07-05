@@ -1,15 +1,15 @@
-package repositories
+package repository
 
 import (
-	"easyinvesting/pkg/models"
+	"easyinvesting/pkg/model"
 
 	"gorm.io/gorm"
 )
 
 type AssetRepository interface {
-	Save(asset *models.Asset) error
-	FindByCodeAndUserID(code string, userID uint) (*models.Asset, error)
-	GetPaginatedByUserID(userID uint, page, pageSize int) ([]*models.Asset, int64, error)
+	Save(asset *model.Asset) error
+	FindByCodeAndUserID(code string, userID uint) (*model.Asset, error)
+	GetPaginatedByUserID(userID uint, page, pageSize int) ([]*model.Asset, int64, error)
 }
 
 type assetRepository struct {
@@ -20,12 +20,12 @@ func NewAssetRepository(db *gorm.DB) AssetRepository {
 	return &assetRepository{db: db}
 }
 
-func (r *assetRepository) Save(asset *models.Asset) error {
+func (r *assetRepository) Save(asset *model.Asset) error {
 	return r.db.Save(asset).Error
 }
 
-func (r *assetRepository) FindByCodeAndUserID(code string, userID uint) (*models.Asset, error) {
-	var asset models.Asset
+func (r *assetRepository) FindByCodeAndUserID(code string, userID uint) (*model.Asset, error) {
+	var asset model.Asset
 	if err := r.db.Where("code = ? AND user_id = ?", code, userID).First(&asset).Error; err != nil {
 		return nil, err
 	}
@@ -34,11 +34,11 @@ func (r *assetRepository) FindByCodeAndUserID(code string, userID uint) (*models
 
 func (r *assetRepository) GetPaginatedByUserID(
 	userID uint, page, pageSize int,
-) ([]*models.Asset, int64, error) {
-	var assets []*models.Asset
+) ([]*model.Asset, int64, error) {
+	var assets []*model.Asset
 	var total int64
 
-	query := r.db.Model(&models.Asset{}).Where("user_id = ?", userID)
+	query := r.db.Model(&model.Asset{}).Where("user_id = ?", userID)
 	if err := query.Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
