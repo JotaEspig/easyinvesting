@@ -14,6 +14,10 @@
             {{ item.market_price * item.hold_quantity }}
           </p>
           <p class="card-text">
+            Invested: {{ item.currency === 0 ? "R$" : "$" }}
+            {{ item.hold_avg_price * item.hold_quantity }}
+          </p>
+          <p class="card-text">
             Quantity: {{ item.hold_quantity }}
           </p>
           <p class="card-text" style="color: green;">
