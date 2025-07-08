@@ -11,7 +11,7 @@
           <h5 class="card-title">{{ item.code }}</h5>
           <p class="card-text">
             Position: {{ item.currency === 0 ? "R$" : "$" }}
-            {{ item.hold_avg_price * item.hold_quantity }}
+            {{ item.market_price * item.hold_quantity }}
           </p>
           <p class="card-text">
             Quantity: {{ item.hold_quantity }}
