@@ -77,8 +77,6 @@ func (r *assetRepository) UpdateCachedValuesTx(tx *gorm.DB, entry *model.AssetEn
 		return tx.Model(&model.Asset{}).Where("id = ?", entry.AssetID).
 			UpdateColumns(map[string]interface{}{
 				"cached_hold_avg_price": gorm.Expr(
-					"((cached_hold_avg_price * cached_hold_quantity) - ?) / (cached_hold_quantity - ?)",
-					entry.Price*float64(entry.Quantity), entry.Quantity,
 					"case when cached_hold_quantity = ? then 0 else ((cached_hold_avg_price * cached_hold_quantity) - ?) / (cached_hold_quantity - ?) end",
 					entry.Quantity, entry.Price*float64(entry.Quantity), entry.Quantity,
 				),
