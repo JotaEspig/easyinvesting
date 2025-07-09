@@ -102,7 +102,7 @@ export class PortfolioComponent {
             next: (data) => {
               asset.market_price = data.market_price;
               asset.profitability = ((asset.market_price - asset.hold_avg_price) / asset.hold_avg_price) * 100;
-              asset.profitability = Math.round(asset.profitability * 100) / 100;
+              asset.profitability = Number(asset.profitability.toFixed(2))
               console.log(`Updated market price for asset ${asset.id}: ${asset.market_price}`);
               console.log(`Profitability for asset ${asset.id}: ${asset.profitability}%`);
             },
