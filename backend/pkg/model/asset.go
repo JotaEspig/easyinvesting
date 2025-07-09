@@ -1,4 +1,4 @@
-package models
+package model
 
 import (
 	"time"
@@ -26,8 +26,4 @@ type Asset struct {
 	CachedHoldAvgPrice float64       `gorm:"default:0"`
 	CachedHoldQuantity uint          `gorm:"default:0"`
 	CacheDate          time.Time     `gorm:"default:CURRENT_TIMESTAMP"`
-}
-
-func (a Asset) IsUserInputValid() bool {
-	return a.Code != "" && a.AssetType == AssetTypeStock && a.Currency >= CurrencyBRL && a.Currency <= CurrencyUSD
 }

@@ -52,4 +52,3 @@ func DB() *gorm.DB {
 
 	return db
 }
-

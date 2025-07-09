@@ -1,9 +1,9 @@
-package controllers
+package controller
 
 import (
 	"easyinvesting/config"
-	"easyinvesting/pkg/dtos"
-	"easyinvesting/pkg/services"
+	"easyinvesting/pkg/dto"
+	"easyinvesting/pkg/service"
 	"easyinvesting/pkg/types"
 	"net/http"
 	"time"
@@ -13,16 +13,16 @@ import (
 )
 
 type UserController struct {
-	userService services.UserService
+	userService service.UserService
 }
 
-func NewUserController(userService services.UserService) *UserController {
+func NewUserController(userService service.UserService) *UserController {
 	return &UserController{userService: userService}
 }
 
 func (controller UserController) Login() echo.HandlerFunc {
 	return func(c echo.Context) error {
-		userDTO := new(dtos.UserDTO)
+		userDTO := new(dto.UserDTO)
 		if err := c.Bind(userDTO); err != nil {
 			return c.JSON(http.StatusBadRequest, map[string]string{"message": "Invalid input"})
 		}
@@ -56,7 +56,7 @@ func (controller UserController) Login() echo.HandlerFunc {
 
 func (controller UserController) Register() echo.HandlerFunc {
 	return func(c echo.Context) error {
-		userDTO := new(dtos.UserDTO)
+		userDTO := new(dto.UserDTO)
 		if err := c.Bind(userDTO); err != nil {
 			return c.JSON(http.StatusBadRequest, map[string]string{"message": "Invalid input"})
 		}

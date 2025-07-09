@@ -1,9 +1,9 @@
-package controllers
+package controller
 
 import (
-	"easyinvesting/pkg/controllers/utils"
-	"easyinvesting/pkg/dtos"
-	"easyinvesting/pkg/services"
+	"easyinvesting/pkg/controller/utils"
+	"easyinvesting/pkg/dto"
+	"easyinvesting/pkg/service"
 	"net/http"
 	"strconv"
 
@@ -11,11 +11,15 @@ import (
 )
 
 type AssetController struct {
-	assetService services.AssetService
+	assetService         service.AssetService
+	assetOnMarketService service.AssetOnMarketService
 }
 
-func NewAssetController(assetService services.AssetService) *AssetController {
-	return &AssetController{assetService: assetService}
+func NewAssetController(
+	assetService service.AssetService,
+	assetOnMarketService service.AssetOnMarketService,
+) *AssetController {
+	return &AssetController{assetService: assetService, assetOnMarketService: assetOnMarketService}
 }
 
 func (controller AssetController) AddUserAsset() echo.HandlerFunc {
@@ -25,7 +29,7 @@ func (controller AssetController) AddUserAsset() echo.HandlerFunc {
 			return c.JSON(http.StatusUnauthorized, map[string]string{"message": "Unauthorized"})
 		}
 
-		var asset dtos.AssetDTO
+		var asset dto.AssetDTO
 		if err := c.Bind(&asset); err != nil {
 			c.Logger().Errorf("Failed to decode asset: %v", err.Error())
 			return c.JSON(http.StatusBadRequest, map[string]string{
@@ -40,7 +44,13 @@ func (controller AssetController) AddUserAsset() echo.HandlerFunc {
 			})
 		}
 
-		// TODO: err = controller.assetService.EnsureAssetOnMarket(c, &asset)
+		err = controller.assetOnMarketService.EnsureAssetOnMarket(asset.Code)
+		if err != nil {
+			c.Logger().Errorf("Failed to ensure asset on market: %v", err.Error())
+			return c.JSON(http.StatusInternalServerError, map[string]string{
+				"message": "failed to ensure asset on market",
+			})
+		}
 
 		asset.UserID = claims.UserID
 		if err := controller.assetService.Save(&asset); err != nil {
@@ -91,8 +101,15 @@ func (controller AssetController) GetPaginatedUserAssets() echo.HandlerFunc {
 
 		pageStr := c.QueryParam("page")
 		pageSizeStr := c.QueryParam("size")
-		if pageStr == "" || pageSizeStr == "" {
-			return c.JSON(http.StatusBadRequest, map[string]string{"message": "Page and size parameters are required"})
+		// if pageStr == "" || pageSizeStr == "" {
+		// 	return c.JSON(http.StatusBadRequest, map[string]string{"message": "Page and size parameters are required"})
+		// }
+		// This below is temporary, in future, use the above one
+		if pageStr == "" {
+			pageStr = "1"
+		}
+		if pageSizeStr == "" {
+			pageSizeStr = "10"
 		}
 
 		page, err := strconv.Atoi(pageStr)

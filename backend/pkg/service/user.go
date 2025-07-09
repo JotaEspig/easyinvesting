@@ -1,28 +1,28 @@
-package services
+package service
 
 import (
-	"easyinvesting/pkg/dtos"
-	"easyinvesting/pkg/models"
-	"easyinvesting/pkg/repositories"
+	"easyinvesting/pkg/dto"
+	"easyinvesting/pkg/model"
+	"easyinvesting/pkg/repository"
 	"fmt"
 )
 
 type UserService interface {
-	Save(userDTO *dtos.UserDTO) error
-	Login(email, password string) (*dtos.UserDTO, error)
-	FindByEmail(email string) (*dtos.UserDTO, error)
+	Save(userDTO *dto.UserDTO) error
+	Login(email, password string) (*dto.UserDTO, error)
+	FindByEmail(email string) (*dto.UserDTO, error)
 }
 
 type userService struct {
-	userRepository repositories.UserRepository
+	userRepository repository.UserRepository
 }
 
-func NewUserService(userRepository repositories.UserRepository) UserService {
+func NewUserService(userRepository repository.UserRepository) UserService {
 	return &userService{userRepository: userRepository}
 }
 
-func (s *userService) Save(userDTO *dtos.UserDTO) error {
-	u := &models.User{
+func (s *userService) Save(userDTO *dto.UserDTO) error {
+	u := &model.User{
 		Email: userDTO.Email,
 	}
 	u.SetPassword(userDTO.Password)
@@ -36,7 +36,7 @@ func (s *userService) Save(userDTO *dtos.UserDTO) error {
 	return nil
 }
 
-func (s *userService) Login(email, password string) (*dtos.UserDTO, error) {
+func (s *userService) Login(email, password string) (*dto.UserDTO, error) {
 	u, err := s.userRepository.FindByEmail(email)
 	if err != nil {
 		return nil, fmt.Errorf("User not found: %w", err)
@@ -44,19 +44,19 @@ func (s *userService) Login(email, password string) (*dtos.UserDTO, error) {
 	if !u.CheckPassword(password) {
 		return nil, fmt.Errorf("Invalid password")
 	}
-	userDTO := &dtos.UserDTO{
+	userDTO := &dto.UserDTO{
 		ID:    u.ID,
 		Email: u.Email,
 	}
 	return userDTO, nil
 }
 
-func (s *userService) FindByEmail(email string) (*dtos.UserDTO, error) {
+func (s *userService) FindByEmail(email string) (*dto.UserDTO, error) {
 	u, err := s.userRepository.FindByEmail(email)
 	if err != nil {
 		return nil, fmt.Errorf("User not found: %w", err)
 	}
-	userDTO := &dtos.UserDTO{
+	userDTO := &dto.UserDTO{
 		ID:    u.ID,
 		Email: u.Email,
 	}
