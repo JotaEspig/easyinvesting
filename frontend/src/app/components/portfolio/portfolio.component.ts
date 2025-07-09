@@ -98,7 +98,7 @@ export class PortfolioComponent {
         }
 
         for (let asset of this.assets) {
-          this.apiService.getRequest<{market_price: number}>(`asset/${asset.id}/realtime`, options).subscribe({
+          this.apiService.getRequest<{market_price: number}>(`asset/${asset.code}/realtime`, options).subscribe({
             next: (data) => {
               asset.market_price = data.market_price;
               asset.profitability = ((asset.market_price - asset.hold_avg_price) / asset.hold_avg_price) * 100;
@@ -137,7 +137,7 @@ export class PortfolioComponent {
           summary: 'Asset Added',
           detail: 'Asset added successfully!'
         });
-        this.apiService.getRequest<{market_price: number}>(`asset/${data.asset.id}/realtime`, options).subscribe({
+        this.apiService.getRequest<{market_price: number}>(`asset/${data.asset.code}/realtime`, options).subscribe({
           next: (data2) => {
             data.asset.market_price = data2.market_price;
             console.log(`Updated market price for asset ${data.asset.id}: ${data.asset.market_price}`);

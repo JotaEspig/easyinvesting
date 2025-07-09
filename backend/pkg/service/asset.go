@@ -11,6 +11,7 @@ type AssetService interface {
 	Save(assetDTO *dto.AssetDTO) error
 	FindByCodeAndUserID(code string, userID uint) (*dto.AssetDTO, error)
 	GetPaginatedByUserID(userID uint, page, pageSize int) ([]*dto.AssetDTO, int64, error)
+	DoesUserOwnAsset(code string, userID uint) (bool, error)
 }
 
 type assetService struct {
@@ -86,4 +87,15 @@ func dtoToModel(assetDTO *dto.AssetDTO) *model.Asset {
 	}
 	asset.ID = assetDTO.ID
 	return asset
+}
+
+func (s *assetService) DoesUserOwnAsset(code string, userID uint) (bool, error) {
+	asset, err := s.assetRepository.FindByCodeAndUserID(code, userID)
+	if err != nil {
+		if err.Error() == "Asset not found" {
+			return false, nil // User does not own the asset
+		}
+		return false, fmt.Errorf("Failed to check asset ownership: %w", err)
+	}
+	return asset != nil, nil // User owns the asset if it exists
 }

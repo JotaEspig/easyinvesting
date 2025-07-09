@@ -27,7 +27,3 @@ type Asset struct {
 	CachedHoldQuantity uint          `gorm:"default:0"`
 	CacheDate          time.Time     `gorm:"default:CURRENT_TIMESTAMP"`
 }
-
-func (a Asset) IsUserInputValid() bool {
-	return a.Code != "" && a.AssetType == AssetTypeStock && a.Currency >= CurrencyBRL && a.Currency <= CurrencyUSD
-}
